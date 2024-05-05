@@ -1,0 +1,42 @@
+Generate fractal patterns using i) Bezier ii) Koch Curve
+
+#include <GL/glut.h>
+#include <cmath>
+
+struct Point {
+    float x;
+    float y;
+    Point(float x1, float y2) : x(x1), y(y2) {}
+};
+void bezier(Point p1, Point p2, Point p3) {
+    glColor3f(1.0, 1.0, 1.0);
+    glBegin(GL_LINE_STRIP);
+    for(float t = 0; t <= 1; t += 0.01) {
+        float x = (1 - t) * (1 - t) * p1.x + 2 * (1 - t) * t * p2.x + t * t * p3.x;
+        float y = (1 - t) * (1 - t) * p1.y + 2 * (1 - t) * t * p2.y + t * t * p3.y;
+        glVertex2f(x, y);
+    }
+    glEnd();
+}
+void display() {
+    glClear(GL_COLOR_BUFFER_BIT);
+    Point p1(-0.5, -0.5);
+    Point p2(0.0, 0.5);
+    Point p3(0.5, -0.5);
+    bezier(p1, p2, p3);
+    glFlush();
+}
+
+int main(int argc, char** argv) {
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+    glutInitWindowSize(500, 500);
+    glutCreateWindow("Bezier Curve");
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(-1, 1, -1, 1);
+    glutDisplayFunc(display);
+    glutMainLoop();
+    return 0;
+}
