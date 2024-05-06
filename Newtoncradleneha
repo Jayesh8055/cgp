@@ -1,0 +1,91 @@
+#include <GL/glut.h>
+#include <stdlib.h>
+#include <math.h>
+#define NUM_BALLS 5 // Number of balls in the cradle
+#define BALL_RADIUS 0.1 // Radius of each ball
+#define BALL_SPACING 0.25 // Distance between each ball
+#define STRING_LENGTH 0.5 // Length of the string
+// Initial positions and velocities of the balls
+float positions[NUM_BALLS] = {-BALL_SPACING * (NUM_BALLS - 1) / 2, -BALL_SPACING
+/ 2, 0, BALL_SPACING / 2, BALL_SPACING * (NUM_BALLS - 1) / 2};
+float velocities[NUM_BALLS] = {0, 0, 0, 0, 0};
+// Define light properties
+void initLight() {
+ GLfloat ambientLight[] = {0.5, 0.5, 0.5, 1.0};
+ GLfloat diffuseLight[] = {1.0, 1.0, 1.0, 1.0};
+ GLfloat lightPos[] = {0.0, 0.0, 2.0, 1.0};
+ 
+ glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
+ glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight);
+ glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+ 
+ glEnable(GL_LIGHTING);
+ glEnable(GL_LIGHT0);
+}
+// Draw a ball at a given position
+void drawBall(float x, float y, float z) {
+ glPushMatrix();
+ glTranslatef(x, y, z);
+ glutSolidSphere(BALL_RADIUS, 20, 20);
+ glPopMatrix();
+}
+// Update positions and velocities based on collisions
+void updateBalls() {
+ float new_positions[NUM_BALLS];
+ float new_velocities[NUM_BALLS];
+ // Calculate new velocities and positions based on collisions
+ for (int i = 0; i < NUM_BALLS - 1; i++) {
+ float delta_p = positions[i + 1] - positions[i] - BALL_RADIUS * 2;
+ if (delta_p < 0) {
+ float total_velocity = velocities[i] + velocities[i + 1];
+ new_velocities[i] = (total_velocity + velocities[i + 1]) / 2;
+ new_velocities[i + 1] = total_velocity - new_velocities[i];
+ } else {
+ new_velocities[i] = velocities[i];
+ new_velocities[i + 1] = velocities[i + 1];
+ }
+ }
+ for (int i = 0; i < NUM_BALLS; i++) {
+ new_positions[i] = positions[i] + new_velocities[i] * 0.01;
+ }
+ // Update positions and velocities
+ for (int i = 0; i < NUM_BALLS; i++) {
+ positions[i] = new_positions[i];
+ velocities[i] = new_velocities[i];
+ }
+}
+// Display the Newton's cradle
+void display() {
+ glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+ glLoadIdentity();
+ 
+ gluLookAt(0, 0, 2, 0, 0, 0, 0, 1, 0);
+ 
+ // Draw the cradle
+ for (int i = 0; i < NUM_BALLS; i++) {
+ drawBall(positions[i], -STRING_LENGTH, 0);
+ }
+ 
+ glutSwapBuffers();
+}
+// Update function
+void update(int value) {
+ updateBalls();
+ glutPostRedisplay();
+ glutTimerFunc(16, update, 0); // Call update every 16 milliseconds
+}
+// Main function
+int main(int argc, char** argv) {
+ glutInit(&argc, argv);
+ glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+ glutInitWindowSize(800, 600);
+ glutCreateWindow("Newton's Cradle");
+ initLight();
+ glEnable(GL_DEPTH_TEST);
+ 
+ glutDisplayFunc(display);
+ glutTimerFunc(0, update, 0);
+ 
+ glutMainLoop();
+ return 0;
+}
