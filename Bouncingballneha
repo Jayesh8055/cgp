@@ -1,0 +1,70 @@
+#include <GL/glut.h>
+#include <stdlib.h>
+#include <math.h>
+#define BALL_RADIUS 0.1 // Radius of the ball
+#define GRAVITY -9.8 // Gravitational acceleration (m/s^2)
+#define TIME_STEP 0.01 // Time step for each update (seconds)
+// Ball properties
+float ball_position[3] = {0.0, 0.5, 0.0}; // Initial position (x, y, z)
+float ball_velocity[3] = {0.0, 0.0, 0.0}; // Initial velocity (vx, vy, vz)
+// Define light properties
+void initLight() {
+ GLfloat ambientLight[] = {0.5, 0.5, 0.5, 1.0};
+ GLfloat diffuseLight[] = {1.0, 1.0, 1.0, 1.0};
+ GLfloat lightPos[] = {0.0, 0.0, 1.0, 1.0};
+ 
+ glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
+ glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight);
+ glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+ 
+ glEnable(GL_LIGHTING);
+ glEnable(GL_LIGHT0);
+}
+// Draw the ball at its current position
+void drawBall() {
+ glPushMatrix();
+ glTranslatef(ball_position[0], ball_position[1], ball_position[2]);
+ glutSolidSphere(BALL_RADIUS, 20, 20);
+ glPopMatrix();
+}
+// Display function
+void display() {
+ glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+ glLoadIdentity();
+ 
+ gluLookAt(0, 1, 2, 0, 0, 0, 0, 1, 0);
+ 
+ drawBall();
+ 
+ glutSwapBuffers();
+}
+// Update function to handle the ball's physics and position
+void update(int value) {
+ // Update the ball's velocity and position
+ ball_velocity[1] += GRAVITY * TIME_STEP;
+ ball_position[1] += ball_velocity[1] * TIME_STEP;
+ // Bounce the ball if it hits the ground
+ if (ball_position[1] - BALL_RADIUS <= 0.0) {
+ ball_velocity[1] = -ball_velocity[1] * 0.8; // Reverse velocity and apply damping
+ ball_position[1] = BALL_RADIUS; // Reset position to just above the ground
+ }
+ // Call the display function and set a timer for the next update
+ glutPostRedisplay();
+ glutTimerFunc(16, update, 0); // Call update every 16 milliseconds (approximately 60 FPS)
+}
+// Main function
+int main(int argc, char** argv) {
+ glutInit(&argc, argv);
+ glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+ glutInitWindowSize(800, 600);
+ glutCreateWindow("Bouncing Ball Animation");
+ 
+ initLight();
+ glEnable(GL_DEPTH_TEST);
+ 
+ glutDisplayFunc(display);
+ glutTimerFunc(0, update, 0);
+ 
+ glutMainLoop();
+ return 0;
+}
